@@ -148,11 +148,28 @@ resource "azurerm_subnet_network_security_group_association" "nsg-assoc" {
 
 #-------------------------------------------------
 # route_table to dirvert traffic through Firewall
-#-------------------------------------------------
+/* #-------------------------------------------------
 resource "azurerm_route_table" "rtout" {
   name                = "route-network-outbound"
   resource_group_name = local.resource_group_name
   location            = local.location
+  tags                = merge({ "ResourceName" = "route-network-outbound" }, var.tags, )
+} */
+
+resource "azurerm_route_table" "rtout" {
+  name                = var.route_table_name
+  location            = local.location
+  resource_group_name = local.resource_group_name
+  dynamic "route" {
+    for_each = var.routes
+    content {
+      name                   = route.value.name
+      address_prefix         = route.value.address_prefix
+      next_hop_type          = route.value.next_hop_type
+      next_hop_in_ip_address = lookup(route.value, "next_hop_in_ip_address", null)
+    }
+  }
+  disable_bgp_route_propagation = var.disable_bgp_route_propagation
   tags                = merge({ "ResourceName" = "route-network-outbound" }, var.tags, )
 }
 
@@ -162,7 +179,7 @@ resource "azurerm_subnet_route_table_association" "rtassoc" {
   route_table_id = azurerm_route_table.rtout.id
 }
 
-resource "azurerm_route" "rt" {
+/* resource "azurerm_route" "rt" {
   count                  = var.hub_firewall_private_ip_address != null ? 1 : 0
   name                   = lower("route-to-firewall-${var.spoke_vnet_name}-${local.location}")
   resource_group_name    = local.resource_group_name
@@ -170,7 +187,10 @@ resource "azurerm_route" "rt" {
   address_prefix         = "0.0.0.0/0"
   next_hop_type          = "VirtualAppliance"
   next_hop_in_ip_address = var.hub_firewall_private_ip_address
-}
+} */
+
+
+
 
 #---------------------------------------------
 # Linking Spoke Vnet to Hub Private DNS Zone
