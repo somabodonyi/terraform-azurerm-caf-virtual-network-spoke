@@ -235,7 +235,7 @@ resource "azurerm_virtual_network_peering" "hub_to_spoke" {
 #-----------------------------------------
 # Network flow logs for subnet and NSG
 #-----------------------------------------
-resource "azurerm_network_watcher_flow_log" "nwflog" {
+/* resource "azurerm_network_watcher_flow_log" "nwflog" {
   for_each                  = var.subnets
   network_watcher_name      = var.is_spoke_deployed_to_same_hub_subscription == true ? "NetworkWatcher_${local.netwatcher_rg_location}" : azurerm_network_watcher.nwatcher.0.name
   resource_group_name       = local.netwatcher_rg_name # Must provide Netwatcher resource Group
@@ -256,9 +256,9 @@ resource "azurerm_network_watcher_flow_log" "nwflog" {
     workspace_resource_id = var.log_analytics_workspace_id
     interval_in_minutes   = 10
   }
-}
+} */
 
-#---------------------------------------------------------------
+/* #---------------------------------------------------------------
 # azurerm monitoring diagnostics - VNet, NSG, PIP, and Firewall
 #---------------------------------------------------------------
 resource "azurerm_monitor_diagnostic_setting" "vnet" {
@@ -282,9 +282,9 @@ resource "azurerm_monitor_diagnostic_setting" "vnet" {
       enabled = false
     }
   }
-}
+} */
 
-resource "azurerm_monitor_diagnostic_setting" "nsg" {
+/* resource "azurerm_monitor_diagnostic_setting" "nsg" {
   for_each                   = var.subnets
   name                       = lower("${each.key}-diag")
   target_resource_id         = azurerm_network_security_group.nsg[each.key].id
@@ -302,4 +302,4 @@ resource "azurerm_monitor_diagnostic_setting" "nsg" {
       }
     }
   }
-}
+} */

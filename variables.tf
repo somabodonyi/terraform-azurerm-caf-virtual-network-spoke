@@ -86,7 +86,7 @@ variable "hub_storage_account_id" {
   default     = ""
 }
 
-variable "log_analytics_workspace_id" {
+/* variable "log_analytics_workspace_id" {
   description = "Specifies the id of the Log Analytics Workspace"
   default     = ""
 }
@@ -104,7 +104,7 @@ variable "log_analytics_logs_retention_in_days" {
 variable "nsg_diag_logs" {
   description = "NSG Monitoring Category details for Azure Diagnostic setting"
   default     = ["NetworkSecurityGroupEvent", "NetworkSecurityGroupRuleCounter"]
-}
+} */
 
 variable "tags" {
   description = "A map of tags to add to all resources"
