@@ -37,12 +37,12 @@ resource "azurerm_resource_group" "rg" {
 # VNET Creation - Default is "true"
 #-------------------------------------
 resource "azurerm_virtual_network" "vnet" {
-  name                = lower("vnet-spoke-${var.spoke_vnet_name}-${local.location}")
+  name                = lower(var.spoke_vnet_name)
   location            = local.location
   resource_group_name = local.resource_group_name
   address_space       = var.vnet_address_space
   dns_servers         = var.dns_servers
-  tags                = merge({ "ResourceName" = lower("vnet-spoke-${var.spoke_vnet_name}-${local.location}") }, var.tags, )
+  tags                = merge({ "ResourceName" = lower(var.spoke_vnet_name) }, var.tags, )
 
   dynamic "ddos_protection_plan" {
     for_each = local.if_ddos_enabled
@@ -93,7 +93,7 @@ resource "azurerm_network_watcher" "nwatcher" {
 #--------------------------------------------------------------------------------------------------------
 resource "azurerm_subnet" "snet" {
   for_each             = var.subnets
-  name                 = lower(format("snet-%s-${var.spoke_vnet_name}-${local.location}", each.value.subnet_name))
+  name                 = lower(each.value.subnet_name)
   resource_group_name  = local.resource_group_name
   virtual_network_name = azurerm_virtual_network.vnet.name
   address_prefixes     = each.value.subnet_address_prefix
@@ -210,7 +210,7 @@ resource "azurerm_private_dns_zone_virtual_network_link" "dzvlink" {
 # Peering between Hub and Spoke Virtual Network
 #-----------------------------------------------
 resource "azurerm_virtual_network_peering" "spoke_to_hub" {
-  name                         = lower("peering-to-hub-${element(split("/", var.hub_virtual_network_id), 8)}")
+  name                         = lower("peering-to-${element(split("/", var.hub_virtual_network_id), 8)}")
   resource_group_name          = local.resource_group_name
   virtual_network_name         = azurerm_virtual_network.vnet.name
   remote_virtual_network_id    = var.hub_virtual_network_id
