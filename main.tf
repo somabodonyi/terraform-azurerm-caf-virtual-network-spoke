@@ -222,7 +222,7 @@ resource "azurerm_virtual_network_peering" "spoke_to_hub" {
 
 resource "azurerm_virtual_network_peering" "hub_to_spoke" {
   provider                     = azurerm.hub
-  name                         = lower("peering-${element(split("/", var.hub_virtual_network_id), 8)}-to-spoke")
+  name                         = lower("peering-${element(split("/", var.hub_virtual_network_id), 8)}-to-${var.spoke_vnet_name}")
   resource_group_name          = element(split("/", var.hub_virtual_network_id), 4)
   virtual_network_name         = element(split("/", var.hub_virtual_network_id), 8)
   remote_virtual_network_id    = azurerm_virtual_network.vnet.id
@@ -259,7 +259,7 @@ resource "azurerm_virtual_network_peering" "hub_to_spoke" {
 } */
 
 /* #---------------------------------------------------------------
-# azurerm monitoring diagnostics - VNet, NSG, PIP, and Firewall
+# azurerm monitoring  - VNet, NSG, PIP, and Firewall
 #---------------------------------------------------------------
 resource "azurerm_monitor_diagnostic_setting" "vnet" {
   name                       = lower("vnet-${var.spoke_vnet_name}-diag")
