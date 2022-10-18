@@ -117,7 +117,7 @@ resource "azurerm_subnet" "snet" {
 #---------------------------------------------------------------
 # Network security group - NSG created for every subnet in VNet
 #---------------------------------------------------------------
-resource "azurerm_network_security_group" "nsg" {
+/* resource "azurerm_network_security_group" "nsg" {
   for_each            = var.subnets
   name                = lower("nsg_${each.key}_in")
   resource_group_name = local.resource_group_name
@@ -138,7 +138,7 @@ resource "azurerm_network_security_group" "nsg" {
       description                = "${security_rule.value[2]}_Port_${security_rule.value[5]}"
     }
   }
-}
+} */
 
 /* resource "azurerm_subnet_network_security_group_association" "nsg-assoc" {
   for_each                  = var.subnets
@@ -175,7 +175,7 @@ resource "azurerm_route_table" "rtout" {
 
 resource "azurerm_subnet_route_table_association" "rtassoc" {
   for_each       = var.subnets
-  subnet_id      = azurerm_subnet.snet[each.key].id
+  subnet_id      = azurerm_subnet.snet[each.value].id
   route_table_id = azurerm_route_table.rtout.id
 }
 
@@ -339,7 +339,7 @@ resource "azurerm_nat_gateway_public_ip_association" "pip_assoc" {
 resource "azurerm_subnet_nat_gateway_association" "subnet_assoc" {
   #for_each       = azurerm_subnet.snet 
   for_each        = tomap({
-    for k, subnets in azurerm_subnet.snet : k => subnets.id if subnets.delegation !=[] ? false : subnets.delegation[0].service_delegation.name == "Microsoft.Web/serverFarms"
+    for k, subnets in azurerm_subnet.snet : k => subnets.id if subnets.delegation ==[] ? false : subnets.delegation[0].service_delegation.name == "Microsoft.Web/serverFarms"
       })
   nat_gateway_id = azurerm_nat_gateway.natgw[0].id
   subnet_id      = each.value
