@@ -99,8 +99,8 @@ resource "azurerm_subnet" "snet" {
   address_prefixes     = each.value.subnet_address_prefix
   service_endpoints    = lookup(each.value, "service_endpoints", [])
   # Applicable to the subnets which used for Private link endpoints or services 
-  enforce_private_link_endpoint_network_policies = lookup(each.value, "enforce_private_link_endpoint_network_policies", null)
-  enforce_private_link_service_network_policies  = lookup(each.value, "enforce_private_link_service_network_policies", null)
+  private_endpoint_network_policies_enabled = lookup(each.value, "private_endpoint_network_policies_enabled", null)
+  private_link_service_network_policies_enabled  = lookup(each.value, "private_link_service_network_policies_enabled", null)
 
   dynamic "delegation" {
     for_each = lookup(each.value, "delegation", {}) != {} ? [1] : []
@@ -303,3 +303,47 @@ resource "azurerm_monitor_diagnostic_setting" "vnet" {
     }
   }
 } */
+
+#---------------------------------------------------------------
+# NAT Gateway
+#---------------------------------------------------------------
+resource "azurerm_public_ip" "pip" {
+  count               = var.create_nat_gateway ? 1 : 0
+  allocation_method   = "Static"
+  location            = var.location
+  name                = var.public_ip_name
+  resource_group_name = var.resource_group_name
+  sku                 = "Standard"
+
+ 
+  tags = merge({ "ResourceName" = format("%s", lower("${var.create_nat_gateway}-pip")) }, var.tags, )
+}
+
+resource "azurerm_nat_gateway" "natgw" {
+  count                   = var.create_nat_gateway ? 1 : 0
+  location                = var.location
+  name                    = var.nat_gateway_name
+  resource_group_name     = var.resource_group_name
+  sku_name                = "Standard"
+  idle_timeout_in_minutes = var.nat_gateway_idle_timeout
+
+  tags = merge({ "ResourceName" = format("%s", lower("${var.create_nat_gateway}")) }, var.tags, )
+}
+
+resource "azurerm_nat_gateway_public_ip_association" "pip_assoc" {
+  count                = var.create_nat_gateway ? 1 : 0
+  nat_gateway_id       = azurerm_nat_gateway.natgw[count.index].id
+  public_ip_address_id = azurerm_public_ip.pip[count.index].id
+}
+
+resource "azurerm_subnet_nat_gateway_association" "subnet_assoc" {
+  #for_each       = azurerm_subnet.snet 
+  for_each        = tomap({
+    for k, subnets in azurerm_subnet.snet : k => subnets.id if subnets.delegation !=[] ? false : subnets.delegation[0].service_delegation.name == "Microsoft.Web/serverFarms"
+      })
+  nat_gateway_id = azurerm_nat_gateway.natgw[0].id
+  subnet_id      = each.value
+  depends_on = [
+    azurerm_subnet.snet
+  ]
+}
