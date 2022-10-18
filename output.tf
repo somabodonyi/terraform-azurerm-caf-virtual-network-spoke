@@ -38,10 +38,10 @@ output "subnet_address_prefixes" {
   value       = [for s in azurerm_subnet.snet : s.address_prefixes]
 }
 
-output "network_security_group_ids" {
+/* output "network_security_group_ids" {
   description = "List of Network security groups and ids"
   value       = [for n in azurerm_network_security_group.nsg : n.id]
-}
+} */
 
 output "ddos_protection_plan_id" {
   description = "Ddos protection plan details"
