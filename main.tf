@@ -134,7 +134,7 @@ resource "azurerm_route_table" "rtout" {
 
 resource "azurerm_subnet_route_table_association" "rtassoc" {
   for_each       = var.subnets
-  subnet_id      = azurerm_subnet.snet[each.value].id
+  subnet_id      = azurerm_subnet.snet[each.key].id
   route_table_id = azurerm_route_table.rtout.id
 }
 
