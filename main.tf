@@ -30,7 +30,7 @@ resource "azurerm_resource_group" "rg" {
   count    = var.create_resource_group ? 1 : 0
   name     = lower(var.resource_group_name)
   location = var.location
-  tags     = merge({ "ResourceName" = format("%s", var.resource_group_name) }, var.tags, )
+  tags     = var.tags
 }
 
 #-------------------------------------
@@ -42,7 +42,7 @@ resource "azurerm_virtual_network" "vnet" {
   resource_group_name = local.resource_group_name
   address_space       = var.vnet_address_space
   dns_servers         = var.dns_servers
-  tags                = merge({ "ResourceName" = lower(var.spoke_vnet_name) }, var.tags, )
+  tags                = var.tags
 
   dynamic "ddos_protection_plan" {
     for_each = local.if_ddos_enabled
@@ -62,7 +62,7 @@ resource "azurerm_network_ddos_protection_plan" "ddos" {
   name                = lower("${var.spoke_vnet_name}-ddos-protection-plan")
   resource_group_name = local.resource_group_name
   location            = local.location
-  tags                = merge({ "ResourceName" = lower("${var.spoke_vnet_name}-ddos-protection-plan") }, var.tags, )
+  tags                = var.tags
 }
 
 #-------------------------------------
@@ -77,7 +77,7 @@ resource "azurerm_resource_group" "nwatcher" {
   count    = var.is_spoke_deployed_to_same_hub_subscription == false ? 1 : 0
   name     = "NetworkWatcherRG"
   location = local.location
-  tags     = merge({ "ResourceName" = "NetworkWatcherRG" }, var.tags, )
+  tags     = var.tags
 }
 
 resource "azurerm_network_watcher" "nwatcher" {
@@ -85,7 +85,7 @@ resource "azurerm_network_watcher" "nwatcher" {
   name                = "NetworkWatcher_${local.location}"
   location            = local.netwatcher_rg_location
   resource_group_name = local.netwatcher_rg_name
-  tags                = merge({ "ResourceName" = format("%s", "NetworkWatcher_${local.location}") }, var.tags, )
+  tags                = var.tags
 }
 
 #--------------------------------------------------------------------------------------------------------
@@ -99,8 +99,8 @@ resource "azurerm_subnet" "snet" {
   address_prefixes     = each.value.subnet_address_prefix
   service_endpoints    = lookup(each.value, "service_endpoints", [])
   # Applicable to the subnets which used for Private link endpoints or services 
-  private_endpoint_network_policies_enabled = lookup(each.value, "private_endpoint_network_policies_enabled", null)
-  private_link_service_network_policies_enabled  = lookup(each.value, "private_link_service_network_policies_enabled", null)
+  private_endpoint_network_policies_enabled     = lookup(each.value, "private_endpoint_network_policies_enabled", null)
+  private_link_service_network_policies_enabled = lookup(each.value, "private_link_service_network_policies_enabled", null)
 
   dynamic "delegation" {
     for_each = lookup(each.value, "delegation", {}) != {} ? [1] : []
@@ -129,7 +129,7 @@ resource "azurerm_route_table" "rtout" {
     }
   }
   disable_bgp_route_propagation = var.disable_bgp_route_propagation
-  tags                = merge({ "ResourceName" = "route-network-outbound" }, var.tags, )
+  tags                          = var.tags
 }
 
 resource "azurerm_subnet_route_table_association" "rtassoc" {
@@ -153,7 +153,7 @@ resource "azurerm_private_dns_zone_virtual_network_link" "dzvlink" {
   virtual_network_id    = azurerm_virtual_network.vnet.id
   private_dns_zone_name = var.private_dns_zone_name
   registration_enabled  = true
-  tags                  = merge({ "ResourceName" = format("%s", lower("${var.private_dns_zone_name}-link-to-hub")) }, var.tags, )
+  tags                  = var.tags
 }
 
 #-----------------------------------------------
@@ -265,8 +265,8 @@ resource "azurerm_public_ip" "pip" {
   resource_group_name = var.resource_group_name
   sku                 = "Standard"
 
- 
-  tags = merge({ "ResourceName" = format("%s", lower("${var.create_nat_gateway}-pip")) }, var.tags, )
+
+  tags = var.tags
 }
 
 resource "azurerm_nat_gateway" "natgw" {
@@ -277,7 +277,7 @@ resource "azurerm_nat_gateway" "natgw" {
   sku_name                = "Standard"
   idle_timeout_in_minutes = var.nat_gateway_idle_timeout
 
-  tags = merge({ "ResourceName" = format("%s", lower("${var.create_nat_gateway}")) }, var.tags, )
+  tags = var.tags
 }
 
 resource "azurerm_nat_gateway_public_ip_association" "pip_assoc" {
@@ -288,9 +288,9 @@ resource "azurerm_nat_gateway_public_ip_association" "pip_assoc" {
 
 resource "azurerm_subnet_nat_gateway_association" "subnet_assoc" {
   #for_each       = azurerm_subnet.snet 
-  for_each        = tomap({
+  for_each = tomap({
     for k, subnets in azurerm_subnet.snet : k => subnets.id if length(subnets.delegation) != 0 ? subnets.delegation[0].service_delegation[0].name == "Microsoft.Web/serverFarms" : false
-      })
+  })
   nat_gateway_id = azurerm_nat_gateway.natgw[0].id
   subnet_id      = each.value
   depends_on = [

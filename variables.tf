@@ -112,7 +112,7 @@ variable "tags" {
   default     = {}
 }
 
-variable "create_nat_gateway"{
+variable "create_nat_gateway" {
   description = "Cretea nat gateway"
   type        = bool
   default     = false
