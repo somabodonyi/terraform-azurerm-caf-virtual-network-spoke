@@ -114,47 +114,6 @@ resource "azurerm_subnet" "snet" {
   }
 }
 
-#---------------------------------------------------------------
-# Network security group - NSG created for every subnet in VNet
-#---------------------------------------------------------------
-/* resource "azurerm_network_security_group" "nsg" {
-  for_each            = var.subnets
-  name                = lower("nsg_${each.key}_in")
-  resource_group_name = local.resource_group_name
-  location            = local.location
-  tags                = merge({ "ResourceName" = lower("nsg_${each.key}_in") }, var.tags, )
-  dynamic "security_rule" {
-    for_each = concat(lookup(each.value, "nsg_inbound_rules", []), lookup(each.value, "nsg_outbound_rules", []))
-    content {
-      name                       = security_rule.value[0] == "" ? "Default_Rule" : security_rule.value[0]
-      priority                   = security_rule.value[1]
-      direction                  = security_rule.value[2] == "" ? "Inbound" : security_rule.value[2]
-      access                     = security_rule.value[3] == "" ? "Allow" : security_rule.value[3]
-      protocol                   = security_rule.value[4] == "" ? "Tcp" : security_rule.value[4]
-      source_port_range          = "*"
-      destination_port_range     = security_rule.value[5] == "" ? "*" : security_rule.value[5]
-      source_address_prefix      = security_rule.value[6] == "" ? element(each.value.subnet_address_prefix, 0) : security_rule.value[6]
-      destination_address_prefix = security_rule.value[7] == "" ? element(each.value.subnet_address_prefix, 0) : security_rule.value[7]
-      description                = "${security_rule.value[2]}_Port_${security_rule.value[5]}"
-    }
-  }
-} */
-
-/* resource "azurerm_subnet_network_security_group_association" "nsg-assoc" {
-  for_each                  = var.subnets
-  subnet_id                 = azurerm_subnet.snet[each.key].id
-  network_security_group_id = azurerm_network_security_group.nsg[each.key].id
-} */
-
-#-------------------------------------------------
-# route_table to dirvert traffic through Firewall
-/* #-------------------------------------------------
-resource "azurerm_route_table" "rtout" {
-  name                = "route-network-outbound"
-  resource_group_name = local.resource_group_name
-  location            = local.location
-  tags                = merge({ "ResourceName" = "route-network-outbound" }, var.tags, )
-} */
 
 resource "azurerm_route_table" "rtout" {
   name                = var.route_table_name
@@ -179,15 +138,6 @@ resource "azurerm_subnet_route_table_association" "rtassoc" {
   route_table_id = azurerm_route_table.rtout.id
 }
 
-/* resource "azurerm_route" "rt" {
-  count                  = var.hub_firewall_private_ip_address != null ? 1 : 0
-  name                   = lower("route-to-firewall-${var.spoke_vnet_name}-${local.location}")
-  resource_group_name    = local.resource_group_name
-  route_table_name       = azurerm_route_table.rtout.name
-  address_prefix         = "0.0.0.0/0"
-  next_hop_type          = "VirtualAppliance"
-  next_hop_in_ip_address = var.hub_firewall_private_ip_address
-} */
 
 
 
@@ -339,7 +289,7 @@ resource "azurerm_nat_gateway_public_ip_association" "pip_assoc" {
 resource "azurerm_subnet_nat_gateway_association" "subnet_assoc" {
   #for_each       = azurerm_subnet.snet 
   for_each        = tomap({
-    for k, subnets in azurerm_subnet.snet : k => subnets.id if subnets.delegation ==[] ? false : subnets.delegation[0].service_delegation.name == "Microsoft.Web/serverFarms"
+    for k, subnets in azurerm_subnet.snet : k => subnets.id if length(subnets.delegation) != 0 ? subnets.delegation[0].service_delegation[0].name == "Microsoft.Web/serverFarms" : false
       })
   nat_gateway_id = azurerm_nat_gateway.natgw[0].id
   subnet_id      = each.value
