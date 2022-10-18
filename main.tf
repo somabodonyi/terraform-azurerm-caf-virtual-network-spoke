@@ -140,11 +140,11 @@ resource "azurerm_network_security_group" "nsg" {
   }
 }
 
-resource "azurerm_subnet_network_security_group_association" "nsg-assoc" {
+/* resource "azurerm_subnet_network_security_group_association" "nsg-assoc" {
   for_each                  = var.subnets
   subnet_id                 = azurerm_subnet.snet[each.key].id
   network_security_group_id = azurerm_network_security_group.nsg[each.key].id
-}
+} */
 
 #-------------------------------------------------
 # route_table to dirvert traffic through Firewall
