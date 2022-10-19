@@ -9,14 +9,6 @@ locals {
   if_ddos_enabled        = var.create_ddos_plan ? [{}] : []
 }
 
-#-------------------------------------
-# Azure Provider Alias for Peering
-#-------------------------------------
-provider "azurerm" {
-  alias           = "hub"
-  subscription_id = element(split("/", var.hub_virtual_network_id), 2)
-  features {}
-}
 
 #---------------------------------------------------------
 # Resource Group Creation or selection - Default is "true"
