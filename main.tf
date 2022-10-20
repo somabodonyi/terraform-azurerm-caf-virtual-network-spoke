@@ -281,7 +281,7 @@ resource "azurerm_nat_gateway_public_ip_association" "pip_assoc" {
 resource "azurerm_subnet_nat_gateway_association" "subnet_assoc" {
   #for_each       = azurerm_subnet.snet 
   for_each = tomap({
-    for k, subnets in azurerm_subnet.snet : k => subnets.id if length(subnets.delegation) != 0 ? subnets.delegation[0].service_delegation[0].name == "Microsoft.Web/serverFarms" : false
+    for k, subnets in azurerm_subnet.snet : k => subnets.id if var.create_nat_gateway == 1 && length(subnets.delegation) != 0 ? subnets.delegation[0].service_delegation[0].name == "Microsoft.Web/serverFarms" : false
   })
   nat_gateway_id = azurerm_nat_gateway.natgw[0].id
   subnet_id      = each.value
