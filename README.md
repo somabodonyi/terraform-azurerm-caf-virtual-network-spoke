@@ -118,74 +118,24 @@ By default, this module will create a resource group and the name of the resourc
 
 > *If you are using an existing resource group, then this module uses the same resource group location to create all resources in this module.*
 
-## Azure Network DDoS Protection Plan [NOT Testted]
-
-By default, this module will not create a DDoS Protection Plan. You can enable/disable it by appending an argument `create_ddos_plan`. If you want to enable a DDoS plan using this module, set argument `create_ddos_plan = true`
-
-## Custom DNS servers [NOT TESTED]
-
-This is an optional feature and only applicable if you are using your own DNS servers superseding default DNS services provided by Azure.Set the argument `dns_servers = ["4.4.4.4"]` to enable this option. For multiple DNS servers, set the argument `dns_servers = ["4.4.4.4", "8.8.8.8"]`
 
 ## Subnets
 
 This module handles the creation and a list of address spaces for subnets. This module uses `for_each` to create subnets and corresponding service endpoints, service delegation, and network security groups. This module associates the subnets to network security groups as well with additional user-defined NSG rules.  
 
 
-## Virtual Network service endpoints
-
-Service Endpoints allows connecting certain platform services into virtual networks.  With this option, Azure virtual machines can interact with Azure SQL and Azure Storage accounts, as if they’re part of the same virtual network, rather than Azure virtual machines accessing them over the public endpoint.
-
-This module supports enabling the service endpoint of your choosing under the virtual network and with the specified subnet. The list of Service endpoints to associate with the subnet values include: `Microsoft.AzureActiveDirectory`, `Microsoft.AzureCosmosDB`, `Microsoft.ContainerRegistry`, `Microsoft.EventHub`, `Microsoft.KeyVault`, `Microsoft.ServiceBus`, `Microsoft.Sql`, `Microsoft.Storage` and `Microsoft.Web`.
-
-> **Recommendation: It is recommended to set as few service endpoints as possible on Spoke subnets. Storage Endpoint is useful and doesn't clutter the firewall logs. Besides, add other endpoints if those are absolutely necessary.**
-
-```hcl
-module "vnet-spoke" {
-  source  = "kumarvna/caf-virtual-network-spoke/azurerm"
-  version = "2.1.0"
-
-  # .... omitted
-
-  # Multiple Subnets, Service delegation, Service Endpoints
-  subnets = {
-    mgnt_subnet = {
-      subnet_name           = "management"
-      subnet_address_prefix = "10.1.2.0/24"
-
-      service_endpoints     = ["Microsoft.Storage"]  
-    }
-  }
-
-# ....omitted
-
-}
-```
 
 ## Network Watcher
 
 This module handle the provision of Network Watcher resource by defining `create_network_watcher` variable. It will enable network watcher, flow logs and traffic analytics for all the subnets in the Virtual Network. Since Azure uses a specific naming standard on network watchers, It will create a resource group `NetworkWatcherRG` and adds the location specific resource.
 
-## Azure Monitoring Diagnostics [NOT TESTED, INACTIVE AT THE MOMENT]
-
-Platform logs in Azure, including the Azure Activity log and resource logs, provide detailed diagnostic and auditing information for Azure resources and the Azure platform they depend on. Platform metrics are collected by default and typically stored in the Azure Monitor metrics database. This module enables to send all the logs and metrics to either storage account, event hub or Log Analytics workspace.
 
 ## Peering to Hub
 
 To peer spoke networks to the hub networks requires the service principal that performs the peering has `Network Operator` custom role on hub network. Linking the Spoke to Hub DNS zones, the service principal also needs the `Private Endpoint Operator` custom role on hub network. If Log Analytics workspace is created in hub or another subscription then, the service principal must have `Log Analytics Contributor` role on workspace or a custom role to connect resources to workspace.
 
-## Linking Hub Private DNS Zone [NOT TESTED]
 
-This module facilitates to link the spoke VNet to private DNS preferably created by Hub Module. To create a link to private DNS zone, set the domain name of the private DNS zone with variable `private_dns_zone_name`. This will always set automatic registration of records to `true`.  
 
-## Recommended naming and tagging conventions
-
-Well-defined naming and metadata tagging conventions help to quickly locate and manage resources. These conventions also help associate cloud usage costs with business teams via chargeback and show back accounting mechanisms.
-
-> ### Resource naming
-
-An effective naming convention assembles resource names by using important resource information as parts of a resource's name. For example, using these [recommended naming conventions](https://docs.microsoft.com/en-us/azure/cloud-adoption-framework/ready/azure-best-practices/naming-and-tagging#example-names), a public IP resource for a production SharePoint workload is named like this: `pip-sharepoint-prod-westus-001`.
-
->
 ## Requirements
 
 Name | Version
@@ -244,6 +194,7 @@ Name | Description | Type | Default
 ## Authors
 
 Originally created by [Kumaraswamy Vithanala](mailto:kumarvna@gmail.com)
+
 Modified by Csaba Gál
 
 ## Other resources
