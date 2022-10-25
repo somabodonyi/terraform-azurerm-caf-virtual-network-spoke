@@ -168,8 +168,13 @@ Name | Description | Type | Default
 `delegation`|defines a subnet delegation feature. takes an object as described in the following example|object|`{}`
 `service_endpoints`|service endpoints for the virtual subnet|object|`{}`
 `hub_virtual_network_id`|The Resource id of the Hub Virtual Network|string|`""`
-`private_dns_zone_name`|The name of the Hub virtual network Private DNS Zone. Must be a valid domain name to enable the resource creation|string|`""`
+`hub_virtual_network_id`|The Resource id of the Hub Virtual Network|string|`""`
+`route_table_name`|Name of the route table|string|`""`
+`routes`|Route table routes|object|`{}`
 `use_remote_gateways`|Controls if remote gateways can be used on the local virtual network|string|`false`
+`create_nat_gateway`|Whehter create not gateway or not|string|`false`
+`nat_gateway_name`|Name of the NAT Gateway|string|`""`
+`public_ip_name`|NAT Gateway public IP name|string|`""`
 `Tags`|A map of tags to add to all resources|map|`{}`
 
 ## Outputs
