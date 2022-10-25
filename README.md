@@ -32,13 +32,12 @@ module "vnet-spoke" {
   vnet_address_space = var.vnet_address_space
 
   # Hub network details to create peering and other setup
-  hub_virtual_network_id          = data.azurerm_virtual_network.vnet-hub.id #var.hub_virtual_network_id
-  hub_storage_account_id          = data.azurerm_resource_group.rg-vnet-hub.id
+  hub_virtual_network_id          = data.azurerm_virtual_network.vnet-hub.id 
+
 
   # Multiple Subnets, Service delegation, Service Endpoints, Network security groups
   # These are default subnets with required configuration, check README.md for more details
-  # Route_table and NSG association to be added automatically for all subnets listed here.
-  # subnet name will be set as per Azure naming convention by defaut. expected value here is: <App or project name>
+  # Route_table to be added automatically for all subnets listed here.
   subnets = {
     default = {
       subnet_name           = var.snet_default_name
@@ -118,12 +117,78 @@ By default, this module will create a resource group and the name of the resourc
 
 > *If you are using an existing resource group, then this module uses the same resource group location to create all resources in this module.*
 
+## Hub network reference
+Hub virtual network id needs to be provided 
+ hub_virtual_network_id          = data.azurerm_virtual_network.vnet-hub.id
 
 ## Subnets
 
 This module handles the creation and a list of address spaces for subnets. This module uses `for_each` to create subnets and corresponding service endpoints, service delegation, and network security groups. This module associates the subnets to network security groups as well with additional user-defined NSG rules.  
 
 
+### Subnet definition with  Microsoft.Web/serverFarms delegation
+
+```hcl
+
+subnets = {
+....
+
+test = {
+      subnet_name           = var.snet_webapps_name
+      subnet_address_prefix = var.snet_webapps_address_prefix 
+      service_endpoints     = []
+      delegation = {
+            name = "delegation"
+            service_delegation = {
+                name= "Microsoft.Web/serverFarms"
+                actions= ["Microsoft.Network/virtualNetworks/subnets/action"]
+            }
+         }
+    }
+
+}
+```
+
+## providers
+
+To define the provider a provider section have to be added
+  
+
+```hcl  
+
+##providers 
+provider "azurerm" {
+  alias			  = "infra"
+  subscription_id = var.subscription_infra_id
+  features {}
+}
+#############
+
+Module "vnet-spoke"{
+ 
+ .....
+  providers = {
+    azurerm.hub = azurerm.infra 
+   }
+ ....
+}
+```
+
+To make that work azurerm.infra provider have to exits within you provieders
+
+
+## route table and routes
+
+```hcl  
+
+  route_table_name= var.rt_name
+   routes = [
+    { name = "Any-to-dev-vnet", address_prefix = "10.110.0.0/16" next_hop_type = "VirtualNetworkGateway"},
+    { name = "Any-to-other-vnet", address_prefix = "10.115.0.0/16" next_hop_type = "VirtualNetworkGateway"},
+  ]
+```
+Address_prefix is the address space of the remmote network where the requests needs to be routed.
+If you need a new route notify SharedTech as well becasuse maybe the Network Gateway in the hub network need to register this address space
 
 ## Network Watcher
 
@@ -167,7 +232,6 @@ Name | Description | Type | Default
 `subnet_address_prefix`|A list of subnets address prefixes inside virtual network|
 `delegation`|defines a subnet delegation feature. takes an object as described in the following example|object|`{}`
 `service_endpoints`|service endpoints for the virtual subnet|object|`{}`
-`hub_virtual_network_id`|The Resource id of the Hub Virtual Network|string|`""`
 `hub_virtual_network_id`|The Resource id of the Hub Virtual Network|string|`""`
 `route_table_name`|Name of the route table|string|`""`
 `routes`|Route table routes|object|`{}`
