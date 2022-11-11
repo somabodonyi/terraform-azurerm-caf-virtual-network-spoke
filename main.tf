@@ -252,9 +252,9 @@ resource "azurerm_monitor_diagnostic_setting" "vnet" {
 resource "azurerm_public_ip" "pip" {
   count               = var.create_nat_gateway ? 1 : 0
   allocation_method   = "Static"
-  location            = var.location
+  location            = local.location
   name                = var.public_ip_name
-  resource_group_name = var.resource_group_name
+  resource_group_name = local.resource_group_name
   sku                 = "Standard"
 
 
@@ -263,9 +263,9 @@ resource "azurerm_public_ip" "pip" {
 
 resource "azurerm_nat_gateway" "natgw" {
   count                   = var.create_nat_gateway ? 1 : 0
-  location                = var.location
+  location                = local.location
   name                    = var.nat_gateway_name
-  resource_group_name     = var.resource_group_name
+  resource_group_name     = local.resource_group_name
   sku_name                = "Standard"
   idle_timeout_in_minutes = var.nat_gateway_idle_timeout
 
