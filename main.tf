@@ -83,6 +83,9 @@ resource "azurerm_network_watcher" "nwatcher" {
 #--------------------------------------------------------------------------------------------------------
 # Subnets Creation with, private link endpoint/servie network policies, service endpoints and Deligation.
 #--------------------------------------------------------------------------------------------------------
+resource "time_sleep" "wait_5_seconds" {
+  create_duration = "5"
+}
 resource "azurerm_subnet" "snet" {
   for_each             = var.subnets
   name                 = lower(each.value.subnet_name)
@@ -104,6 +107,7 @@ resource "azurerm_subnet" "snet" {
       }
     }
   }
+  depends_on = [time_sleep.wait_5_seconds]
 }
 
 
