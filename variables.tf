@@ -71,14 +71,31 @@ variable "hub_firewall_private_ip_address" {
   default     = null
 }
 
-variable "private_dns_zone_name" {
-  description = "The name of the Hub Private DNS zone"
+variable "private_dns_zone_registration" {
+  description = "Register all vnets to the supported private dns zones"
+  type        = bool
+  default     = true
+}
+
+variable "private_dns_zone_resource_group_name" {
+  description = "The name of Private DNS Zones resourcegroup name."
+  type        = string
   default     = null
+}
+
+variable "private_dns_zone_names" { 
+  description = "The name of Private DNS Zones."
+  type        = map(string)
+  default = {
+    privatelink_azurewebsites_net = "privatelink.azurewebsites.net",
+    privatelink_database_windows_net = "privatelink.database.windows.net",
+    privatelink_documents_azure_com = "privatelink.documents.azure.com"
+  }
 }
 
 variable "use_remote_gateways" {
   description = "Controls if remote gateways can be used on the local virtual network."
-  default     = false
+  default     = true
 }
 
 variable "hub_storage_account_id" {
