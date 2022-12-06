@@ -30,7 +30,7 @@ output "virtual_network_address_space" {
 
 output "subnet_ids" {
   description = "List of IDs of subnets"
-  value       = [for s in azurerm_subnet.snet : s.id]
+  value = tomap({ for k, s in azurerm_subnet.snet : k => s.id })
 }
 
 output "subnet_address_prefixes" {
