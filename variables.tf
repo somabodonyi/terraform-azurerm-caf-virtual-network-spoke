@@ -89,7 +89,10 @@ variable "private_dns_zone_names" {
   default = {
     privatelink_azurewebsites_net = "privatelink.azurewebsites.net",
     privatelink_database_windows_net = "privatelink.database.windows.net",
-    privatelink_documents_azure_com = "privatelink.documents.azure.com"
+    privatelink_documents_azure_com = "privatelink.documents.azure.com",
+    privatelink_search_windows_net = "privatelink.search.windows.net",
+    privatelink_table_core_windows_net="privatelink.table.core.windows.net",
+    azurecontainerapps_io="azurecontainerapps.io"
   }
 }
 
