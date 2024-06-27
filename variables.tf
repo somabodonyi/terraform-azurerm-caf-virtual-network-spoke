@@ -88,6 +88,7 @@ variable "private_dns_zone_names" {
   type        = map(string)
   default = {
     privatelink_azurewebsites_net = "privatelink.azurewebsites.net",
+    privatelink_blob_core_windows_net = "privatelink.blob.core.windows.net",
     privatelink_database_windows_net = "privatelink.database.windows.net",
     privatelink_documents_azure_com = "privatelink.documents.azure.com",
     privatelink_search_windows_net = "privatelink.search.windows.net",
