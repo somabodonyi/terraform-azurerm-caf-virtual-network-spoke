@@ -11,11 +11,3 @@ terraform {
   }
   required_version = ">= 1.9.5"
 }
-
-provider "azurerm" {
-  alias                           = "hub"
-  resource_provider_registrations = "none"
-  subscription_id                 = var.hub_subscription_id
-
-  features {}
-}
