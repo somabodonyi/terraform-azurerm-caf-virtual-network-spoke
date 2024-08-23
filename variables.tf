@@ -1,3 +1,8 @@
+variable "hub_subscription_id" {
+  description = "The Azure subscription ID for the hub"
+  type = string
+}
+
 variable "create_resource_group" {
   description = "Whether to create resource group and use it for all networking resources"
   default     = true
@@ -40,9 +45,9 @@ variable "routes" {
   /*ROUTES = [{ name = "", address_prefix = "", next_hop_type = "", next_hop_in_ip_address = "" }]*/
 }
 
-variable "disable_bgp_route_propagation" {
+variable "bgp_route_propagation_enabled" {
   type        = bool
-  default     = true
+  default     = false
   description = "Boolean flag which controls propagation of routes learned by BGP on that route table."
 }
 
