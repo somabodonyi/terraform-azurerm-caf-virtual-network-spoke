@@ -1,8 +1,3 @@
-variable "hub_subscription_id" {
-  description = "The Azure subscription ID for the hub"
-  type = string
-}
-
 variable "create_resource_group" {
   description = "Whether to create resource group and use it for all networking resources"
   default     = true
