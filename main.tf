@@ -91,7 +91,7 @@ resource "azurerm_subnet" "snet" {
   address_prefixes     = each.value.subnet_address_prefix
   service_endpoints    = lookup(each.value, "service_endpoints", [])
   # Applicable to the subnets which used for Private link endpoints or services 
-  private_endpoint_network_policies_enabled     = lookup(each.value, "private_endpoint_network_policies_enabled", null)
+  private_endpoint_network_policies     = lookup(each.value, "private_endpoint_network_policies", null)
   private_link_service_network_policies_enabled = lookup(each.value, "private_link_service_network_policies_enabled", null)
 
   dynamic "delegation" {
@@ -120,7 +120,7 @@ resource "azurerm_route_table" "rtout" {
       next_hop_in_ip_address = lookup(route.value, "next_hop_in_ip_address", null)
     }
   }
-  disable_bgp_route_propagation = var.disable_bgp_route_propagation
+  bgp_route_propagation_enabled = var.bgp_route_propagation_enabled
   tags                          = var.tags
 }
 
