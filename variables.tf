@@ -83,17 +83,17 @@ variable "private_dns_zone_resource_group_name" {
   default     = null
 }
 
-variable "private_dns_zone_names" { 
+variable "private_dns_zone_names" {
   description = "The name of Private DNS Zones."
   type        = map(string)
   default = {
-    privatelink_azurewebsites_net = "privatelink.azurewebsites.net",
-    privatelink_blob_core_windows_net = "privatelink.blob.core.windows.net",
-    privatelink_database_windows_net = "privatelink.database.windows.net",
-    privatelink_documents_azure_com = "privatelink.documents.azure.com",
-    privatelink_search_windows_net = "privatelink.search.windows.net",
-    privatelink_table_core_windows_net="privatelink.table.core.windows.net",
-    azurecontainerapps_io="azurecontainerapps.io"
+    privatelink_azurewebsites_net      = "privatelink.azurewebsites.net",
+    privatelink_blob_core_windows_net  = "privatelink.blob.core.windows.net",
+    privatelink_database_windows_net   = "privatelink.database.windows.net",
+    privatelink_documents_azure_com    = "privatelink.documents.azure.com",
+    privatelink_search_windows_net     = "privatelink.search.windows.net",
+    privatelink_table_core_windows_net = "privatelink.table.core.windows.net",
+    azurecontainerapps_io              = "azurecontainerapps.io"
   }
 }
 

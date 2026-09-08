@@ -122,7 +122,12 @@ Hub virtual network id needs to be provided
 
 ## Subnets
 
-This module handles the creation and a list of address spaces for subnets. This module uses `for_each` to create subnets and corresponding service endpoints, service delegation, and network security groups. This module associates the subnets to network security groups as well with additional user-defined NSG rules.  
+This module handles the creation and a list of address spaces for subnets. This module uses `for_each` to create subnets and corresponding service endpoints and service delegation. The route table created by this module is associated with every subnet listed in `subnets`.
+
+`service_endpoints` is a list of service names, for example
+`service_endpoints = ["Microsoft.Storage", "Microsoft.Sql"]`. AzureRM v5 expects
+`service_endpoint` blocks on the subnet resource, but the module expands them from this
+list, so the input format is unchanged.
 
 
 ### Subnet definition with  Microsoft.Web/serverFarms delegation
@@ -225,19 +230,86 @@ For custom private dns zone names the `private_dns_zone_names` needs to be provi
 ```
 `private_dns_zone_names`  parameter defined as a map because in this it will be added to the state by name not by index if we use only a simple list. 
 The modification of the values are safe.
+
+> Because AzureRM v5 links zones by ID, the module reads each zone through the
+> `azurerm.hub` provider. The identity behind that provider therefore needs **read** access
+> to the Private DNS zones (`Microsoft.Network/privateDnsZones/read`) in
+> `private_dns_zone_resource_group_name`, in addition to the permission to create the
+> virtual network links. Every zone listed in `private_dns_zone_names` must already exist,
+> otherwise the plan fails on the lookup.
+## Upgrading to the AzureRM provider v5
+
+This module requires **AzureRM provider v5** (`>= 5.0.0, < 6.0.0`) and **Terraform >= 1.9.5**.
+Two v5 breaking changes were absorbed inside the module, so the module's own input
+variables did not change:
+
+* `azurerm_subnet` &mdash; the `service_endpoints` list was replaced by repeatable
+  `service_endpoint` blocks. The module still takes `service_endpoints` as a list of
+  service names per subnet and expands the blocks internally.
+* `azurerm_private_dns_zone_virtual_network_link` &mdash; `private_dns_zone_name` and
+  `resource_group_name` were replaced by `private_dns_zone_id`. The module keeps taking
+  `private_dns_zone_names` / `private_dns_zone_resource_group_name` and resolves the zone
+  IDs with a `data.azurerm_private_dns_zone` lookup against the hub provider.
+
+Neither change alters existing resource addresses or Azure resource IDs, so no
+`terraform state mv` or import is required when upgrading. Review the plan before
+applying.
+
+### Changes you need to make in the calling configuration
+
+AzureRM v5 changed two provider-level defaults. These live in *your* `provider` blocks,
+not in this module:
+
+* **Resource Provider registration** now defaults to `none` (it was `legacy` in v4), and
+  `skip_provider_registration` has been removed. Register what you need, or opt back into
+  the old behaviour:
+
+```hcl
+provider "azurerm" {
+  features {}
+
+  # Register only what is needed ...
+  resource_providers_to_register = ["Microsoft.Network"]
+
+  # ... or keep the v4 behaviour:
+  # resource_provider_registrations = "legacy"
+}
+```
+
+* **Enhanced validation** moved into the `features` block and now defaults to disabled, so
+  invalid locations are reported at apply time rather than plan time. To restore v4
+  behaviour:
+
+```hcl
+provider "azurerm" {
+  features {
+    enhanced_validation {
+      locations          = true
+      resource_providers = true
+    }
+  }
+}
+```
+
+See the [AzureRM v5 upgrade guide](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/guides/5.0-upgrade-guide)
+for the full list of changes.
+
 ## Requirements
 
 Name | Version
 -----|--------
-terraform | >= 0.13
-azurerm | >= 3.20.0
+terraform | >= 1.9.5
+azurerm | >= 5.0.0, < 6.0.0
 
 ## Providers
 
-| Name | Version |
-|------|---------|
-azurerm | >= 3.20.0
-random | n/a
+| Name | Alias | Version | Purpose |
+|------|-------|---------|---------|
+azurerm | (default) | >= 5.0.0, < 6.0.0 | Subscription the spoke network is created in
+azurerm | `hub` | >= 5.0.0, < 6.0.0 | Hub subscription, used for the hub-to-spoke peering and the Private DNS zone links
+
+The `azurerm.hub` alias is declared as a `configuration_aliases` in this module, so
+callers **must** pass it explicitly via the `providers` argument. See [providers](#providers) above.
 
 ## Inputs
 
@@ -277,7 +349,6 @@ Name | Description | Type | Default
 `virtual_network_address_space`|List of address spaces that are used the virtual network.
 `subnet_ids`|List of IDs of subnets
 `subnet_address_prefixes`|List of address prefix for  subnets
-`network_security_group_ids`|List of Network security groups and ids
 `ddos_protection_plan_id`|Azure Network DDoS protection plan id
 `network_watcher_id`|ID of Network Watcher
 `route_table_name`|The resource id of the route table

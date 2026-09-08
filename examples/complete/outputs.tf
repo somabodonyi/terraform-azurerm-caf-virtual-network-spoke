@@ -29,18 +29,13 @@ output "virtual_network_address_space" {
 }
 
 output "subnet_ids" {
-  description = "List of IDs of subnets"
+  description = "Map of subnet keys to subnet IDs"
   value       = module.vnet-spoke.subnet_ids
 }
 
 output "subnet_address_prefixes" {
   description = "List of address prefix for subnets"
   value       = module.vnet-spoke.subnet_address_prefixes
-}
-
-output "network_security_group_ids" {
-  description = "List of Network security groups and ids"
-  value       = module.vnet-spoke.network_security_group_ids
 }
 
 output "ddos_protection_plan_id" {

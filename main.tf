@@ -6,8 +6,8 @@ locals {
   location               = element(coalescelist(data.azurerm_resource_group.rgrp.*.location, azurerm_resource_group.rg.*.location, [""]), 0)
   netwatcher_rg_name     = element(coalescelist(data.azurerm_resource_group.netwatch.*.name, azurerm_resource_group.nwatcher.*.name, [""]), 0)
   netwatcher_rg_location = element(coalescelist(data.azurerm_resource_group.netwatch.*.location, azurerm_resource_group.nwatcher.*.location, [""]), 0)
-  if_ddos_enabled        = var.create_ddos_plan ? [{}] : [] 
-  }
+  if_ddos_enabled        = var.create_ddos_plan ? [{}] : []
+}
 
 
 #---------------------------------------------------------
@@ -89,10 +89,19 @@ resource "azurerm_subnet" "snet" {
   resource_group_name  = local.resource_group_name
   virtual_network_name = azurerm_virtual_network.vnet.name
   address_prefixes     = each.value.subnet_address_prefix
-  service_endpoints    = lookup(each.value, "service_endpoints", [])
-  # Applicable to the subnets which used for Private link endpoints or services 
-  private_endpoint_network_policies     = lookup(each.value, "private_endpoint_network_policies", null)
+
+  # Applicable to the subnets which used for Private link endpoints or services
+  private_endpoint_network_policies             = lookup(each.value, "private_endpoint_network_policies", null)
   private_link_service_network_policies_enabled = lookup(each.value, "private_link_service_network_policies_enabled", null)
+
+  # AzureRM v5 replaced the `service_endpoints` list with `service_endpoint` blocks.
+  # The module input stays a list of service names for backwards compatibility.
+  dynamic "service_endpoint" {
+    for_each = lookup(each.value, "service_endpoints", [])
+    content {
+      service = service_endpoint.value
+    }
+  }
 
   dynamic "delegation" {
     for_each = lookup(each.value, "delegation", {}) != {} ? [1] : []
@@ -137,15 +146,23 @@ resource "azurerm_subnet_route_table_association" "rtassoc" {
 #---------------------------------------------
 # Linking Spoke Vnet to Hub Private DNS Zone
 #---------------------------------------------
+# AzureRM v5 removed `private_dns_zone_name` and `resource_group_name` from the link
+# resource in favour of `private_dns_zone_id`, so the hub zones are resolved by name here.
+data "azurerm_private_dns_zone" "dz" {
+  provider            = azurerm.hub
+  for_each            = var.private_dns_zone_registration ? var.private_dns_zone_names : {}
+  name                = each.value
+  resource_group_name = var.private_dns_zone_resource_group_name
+}
+
 resource "azurerm_private_dns_zone_virtual_network_link" "dzvlink" {
-  provider              = azurerm.hub
-  for_each               = var.private_dns_zone_registration ? var.private_dns_zone_names : {}
-  name                  = lower("vnl-${azurerm_virtual_network.vnet.name}")
-  resource_group_name   = var.private_dns_zone_resource_group_name
-  virtual_network_id    = azurerm_virtual_network.vnet.id
-  private_dns_zone_name = each.value
-  registration_enabled  = false
-  tags                  = var.tags
+  provider             = azurerm.hub
+  for_each             = var.private_dns_zone_registration ? var.private_dns_zone_names : {}
+  name                 = lower("vnl-${azurerm_virtual_network.vnet.name}")
+  private_dns_zone_id  = data.azurerm_private_dns_zone.dz[each.key].id
+  virtual_network_id   = azurerm_virtual_network.vnet.id
+  registration_enabled = false
+  tags                 = var.tags
 }
 
 #-----------------------------------------------
