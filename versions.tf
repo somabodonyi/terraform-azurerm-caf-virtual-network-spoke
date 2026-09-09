@@ -6,5 +6,5 @@ terraform {
       configuration_aliases = [azurerm.hub]
     }
   }
-  required_version = ">= 1.9.5"
+  required_version = ">= 1.9.5, < 2.0.0"
 }

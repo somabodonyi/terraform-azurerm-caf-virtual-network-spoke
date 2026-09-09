@@ -239,7 +239,8 @@ The modification of the values are safe.
 > otherwise the plan fails on the lookup.
 ## Upgrading to the AzureRM provider v5
 
-This module requires **AzureRM provider v5** (`>= 5.0.0, < 6.0.0`) and **Terraform >= 1.9.5**.
+This module requires **AzureRM provider v5** (`>= 5.0.0, < 6.0.0`) and **Terraform**
+`>= 1.9.5, < 2.0.0`.
 Two v5 breaking changes were absorbed inside the module, so the module's own input
 variables did not change:
 
@@ -298,7 +299,7 @@ for the full list of changes.
 
 Name | Version
 -----|--------
-terraform | >= 1.9.5
+terraform | >= 1.9.5, < 2.0.0
 azurerm | >= 5.0.0, < 6.0.0
 
 ## Providers
